@@ -1,91 +1,208 @@
-# Hacker-Etico-Ambiente
+# Nemesis Harness Opsec
 
-Ambiente de estudo e prática (PTES autorizado) com proteção de IP em camadas.
+Ambiente de pentest etico com cadeia de protecao de IP, harness de desenvolvimento SDD
+(Specification-Driven Development) e harness operacional para exercicios autorizados em
+laboratorios (HackTheBox, TryHackMe, DVWA, VulnHub).
 
-> **Uso ético obrigatório:** apenas testes autorizados, laboratórios próprios
-> (HackTheBox, TryHackMe, DVWA, VulnHub) e pesquisas com escopo formal.
-> Ferramentas de anonimato NÃO tornam atividade ilegal em legal.
+> **Uso etico obrigatorio:** apenas testes autorizados, laboratorios proprios e
+> pesquisas com escopo formal. Ferramentas de anonimato NAO tornam atividade ilegal
+> em legal.
 
-## Estrutura
+## Arquitetura: duas camadas
+
+O projeto possui duas camadas distintas e complementares:
+
+| Camada | Onde | Funcao |
+|---|---|---|
+| **Desenvolvimento** | `.opencode/` | Criar e evoluir o harness (regras, skills, agents, commands, RAG, specs, plans) |
+| **Operacional** | `.hacker/` | Executar exercicios de seguranca autorizados (pentest, scraping, red team, blue team) |
+
+A integracao entre as camadas e via cross-references: `.hacker/` referencia `.opencode/rules/`
+para regras e `.opencode/plans/` para planos de referencia.
+
+## Estrutura do repositorio
 
 ```
 hacker-etico-ambiente/
-├── AGENTS.md                    ← Documento canônico do agente (invariantes, leis F1..F12, mapa)
-├── LEDGER.md                    ← Registro cronológico completo do que foi feito
-├── opencode.json                ← Config do opencode (instructions: regras carregadas como instruções)
-└── .opencode/
-    ├── rules/                   ← 8 regras canônicas (documentation-style, epistemic-safety,
-    │                                  fable-method, trust-ledger, repo-profile,
-    │                                  pentest-harness-execution, harness-integrity, opsec-canon)
-    ├── skills/                  ← 12 skills do SDD + meta-skill (SKILL.md por pasta, nome==pasta)
-    ├── agents/                  ← 4 agentes opencode (orquestrador, implementador, revisor, documentador)
-    ├── commands/                ← 3 comandos (pipelines auto/manual/redteam-hardening)
-    ├── ledger/
-    │   ├── trust-ledger.md      ← Ledger estruturado (append-only, 10 tipos de evento)
-    │   └── modules/             ← Ledger por módulo da cadeia (criado quando módulo alterado)
-    ├── rag/                     ← RAG de método: espelho Fable (15 skills) + orquestrador
-    ├── specs/                   ← Especificações do pipeline SDD
-    └── plans/                   ← Planos do pipeline SDD
-    (o ambiente operacional vive em ~/opsec/)
+├── AGENTS.md                         Documento canonico do agente (invariantes, leis F1..F12)
+├── LEDGER.md                         Registro cronologico completo de atividades
+├── opencode.json                     Config do opencode (instructions: regras + RAG)
+├── .ai-memory.toml                   Config do ai-memory (workspace, ignore_paths)
+│
+├── .opencode/                        Camada de desenvolvimento / governanca
+│   ├── rules/                        9 regras canonicas
+│   ├── skills/                       15 skills do SDD
+│   ├── agents/                       4 agentes opencode
+│   ├── commands/                     3 comandos de pipeline
+│   ├── ledger/
+│   │   ├── trust-ledger.md           Ledger estruturado (append-only, 10 tipos de evento)
+│   │   └── modules/                  Ledger por modulo da cadeia
+│   ├── rag/                          RAG de metodo: espelho Fable (15 skills) + orquestrador
+│   ├── specs/                        Especificacoes do pipeline SDD (16 specs)
+│   └── plans/                        Planos do pipeline SDD (16 plans)
+│
+├── .hacker/                          Camada operacional
+│   ├── gate/                         Dark-Moon: verificar-vazamento.sh GOOD antes de rede
+│   ├── orquestrador/                 Supervisor (ScreenBog + Decepticon) + pipeline completo
+│   ├── agentes/                      6 contratos: red-team, blue-team, pentest, scraping,
+│   │                                 web-scanner, orquestrador-pipeline
+│   ├── memoria/                      3 camadas: conhecimento/grafo, sessao, integridade
+│   ├── ledger/                       Append-only, SHA-256 por entrada, sem IP real
+│   ├── rag/                          Conhecimento (OWASP, MITRE, canon interno)
+│   ├── templates/                    Operacao, contrato de handoff, relatorio
+│   ├── reports/                      Relatorios operacionais de exercicios
+│   ├── scripts/                      runner.sh, validar-scan-web.sh
+│   └── README.md                     Manifesto do harness operacional
+│
+└── ~/opsec/                          Ambiente de protecao (fora do repo)
+    ├── docker-compose.yml            gluetun, torproxy-host, torproxy-vpn, kali-sandbox
+    ├── sandbox/Dockerfile            Kali base + ferramentas de pentest
+    ├── scripts/                      Scripts de protecao (7 scripts)
+    └── .env                          Credenciais (preenchido pelo usuario)
 ```
 
-## Os blocos do ambiente
+## Cadeia de protecao de IP
 
-| Bloco | Onde | Função |
+A protecao de anonimato e uma **cadeia de camadas independentes**. O que entrega
+anonimato e a REDE RESULTANTE, nao uma camada isolada.
+
+| # | Camada | Funcao |
 |---|---|---|
-| WireGuard local (host) | wg0 (10.0.0.2/24) | Camada 1 — VPN oficial do pesquisador |
-| Docker + Compose | sistema | Base do sandbox |
-| Tor (dperson/torproxy) | container torproxy-host | Camada 2 — anonimato |
-| Kill-switch WireGuard | ~/opsec/scripts/kill-switch.sh | Auditoria fail-closed do wg0 |
-| Verificador de vazamento | ~/opsec/scripts/verificar-vazamento.sh | Auditoria IP/DNS/IPv6/WebRTC |
-| Segunda leitura | ~/opsec/scripts/verificador-externo.sh | Corroboracao independente do verificador (SPEC_006) |
-| Sessao segura | iniciar-sessao.sh / encerrar-sessao.sh | IPv6 off + kill-switch + checagem |
+| 1 | WireGuard local (wg0) | VPN oficial do pesquisador |
+| 2 | Proton VPN (host) | VPN externa adicional |
+| 3 | gluetun (container) | VPN secundaria do sandbox |
+| 4 | Tor (containers) | Exit node via socks5h://127.0.0.1:9050 |
+| 5 | Sandbox Kali | Ferramentas isoladas |
+| 6 | Kill-switch | Auditoria fail-closed do wg0 (verificador, nao enforcer) |
+| 7 | DNS sem leak | sem ECS vazando o /24 real |
+| 8 | IPv6 off | elimina leak por v6 real |
 
-## Como usar (resumo)
-1. `sudo bash ~/opsec/scripts/session-start-hacking-security.sh`: script PRINCIPAL, ativa WireGuard (wg0), sobe container torproxy-host, IPv6 off, kill-switch, valida vazamentos (verificar-vazamento.sh), gera atestado e grava no LEDGER
-2. Proxy Tor p/ browser/scripts: `socks5h://127.0.0.1:9050`
-3. Ao terminar: `bash ~/opsec/scripts/encerrar-sessao.sh`
+A prova empirica da cobertura e o verificador de vazamento
+(`~/opsec/scripts/verificar-vazamento.sh`), que emite GOOD ou BAD.
+
+## Como usar
+
+### Sessao segura (antes de qualquer atividade de rede)
+
+```bash
+# 1. Ativar protecao completa (WireGuard, Tor, IPv6 off, kill-switch, validacao)
+sudo bash ~/opsec/scripts/session-start-hacking-security.sh
+
+# 2. Usar Tor como proxy (browser ou scripts)
+# socks5h://127.0.0.1:9050
+
+# 3. Encerrar sessao ao fim
+bash ~/opsec/scripts/encerrar-sessao.sh
+```
 
 Detalhes em `~/opsec/README.md`.
 
-## Harness de desenvolvimento (SDD)
+### Pipeline SDD (desenvolvimento)
 
-O método SDD (Specification-Driven Development) do Nemesis Defender foi copiado e adaptado como
-harness de desenvolvimento deste repo, na estrutura da TUI do opencode (`.opencode/`). O
-pipeline orquestra o ciclo completo de alterações no projeto:
-spec → análise crítica → regras → planos → implementação → testes → doc-sync → finalização.
+O pipeline SDD orquestra o ciclo completo de alteracoes no projeto:
+spec -> analise critica -> regras -> planos -> implementacao -> testes -> doc-sync -> finalizacao.
 
-Modos disponíveis (comandos do opencode):
-- **Auto** (default): pipeline 100% autônomo até a PARADA ÚNICA ao fim da doc-sync (`/hacker-sdd-pipeline-auto`)
-- **Manual**: cada skill bloqueia para aprovação explícita (`/hacker-sdd-pipeline-manual`)
-- **Red Team da cadeia**: audita os vetores de proteção, busca novos vetores, registra ciclo-redteam (`/hacker-redteam-hardening-pipeline`)
+Modos disponiveis (comandos do opencode):
+- **Auto** (default): pipeline 100% autonomo ate a PARADA UNICA ao fim da doc-sync
+  (`/hacker-sdd-pipeline-auto`)
+- **Manual**: cada skill bloqueia para aprovacao explicita (`/hacker-sdd-pipeline-manual`)
+- **Red Team da cadeia**: audita os vetores de protecao, busca novos vetores
+  (`/hacker-redteam-hardening-pipeline`)
 
-Invariantes do agente (resumo): cadeia de proteção validada ANTES de qualquer ação de rede;
-git = Fernando; sudo/auth = Fernando; provar com evidência (nunca supor); usar o ledger para
-registrar decisões imediatamente.
+### Harness operacional
 
-Detalhes completos em `AGENTS.md` e `.opencode/rules/`.
+O harness hacker orquestra exercicios autorizados com gate de protecao obrigatorio
+antes de cada acao de rede. Detalhes em `.hacker/README.md`.
 
-## Harness Hacker (operacional)
+## COMPONENTES DO HARNESS
 
-O harness hacker orquestra exercicios de pentest, scraping, red team e blue team em
-laboratorios autorizados, com **gate de protecao obrigatório** antes de qualquer
-acao de rede.
+### Regras canonicas (9)
 
-```
-.hacker/
-├── gate/          ← Dark-Moon: verificar-vazamento.sh GOOD antes de rede
-├── orquestrador/  ← Supervisor (ScreenBog + Decepticon)
-├── agentes/       ← contratos: red-team, blue-team, pentest, scraping
-├── memoria/       ← 3 camadas: conhecimento/grafo, sessao, integridade (Memory Guard)
-├── ledger/        ← append-only, SHA-256 por entrada, sem IP real
-├── rag/           ← conhecimento (OWASP, MITRE, canon interno)
-└── templates/     ← operacao, contrato de handoff, relatorio
-```
+| Regra | Funcao |
+|---|---|
+| `hacker-epistemic-safety` | Disciplina epistemica anti-sycophancy e anti-invencao |
+| `hacker-fable-method` | Leis F1..F12 do metodo Fable |
+| `hacker-documentation-style` | Estilo de documentacao (sem travessao, sem 1a pessoa) |
+| `hacker-trust-ledger` | Vereditos sao artefatos persistentes (lei F11) |
+| `hacker-repo-profile` | Validacao por fase do perfil do repo |
+| `hacker-opsec-canon` | Canon por modulo da cadeia de protecao |
+| `hacker-pentest-harness-execution` | Anti-recusa para testes autorizados |
+| `hacker-harness-integrity` | Verificacao mecanica do harness (lei F10) |
+| `hacker-web-scan-report` | Relatorio de scan de aplicacoes web |
 
-Invariantes: cadeia de protecao validada ANTES de acao de rede; sem IP real
-em relatorios; uso etico (lab autorizado); escopo definido pelo Fernando.
+### Skills SDD (15)
 
-Destilado de: ScreenBog (RAG), Decepticon (orquestrador), Dark-Moon (gate),
-llmitm_v2/PentestGPT/pentestagent (memoria+ledger), OWASP Memory Guard (integridade).
-Detalhes completos em `.hacker/README.md`.
+| Skill | Funcao |
+|---|---|
+| `hacker-specification-design` | Converte request em especificacao tecnica |
+| `hacker-critical-analysis` | Analise critica de specs (gate duplo P1/P2) |
+| `pre-writing-rule-control` | Valida plano contra regras antes da escrita |
+| `hacker-writing-plans` | Converte spec aprovada em plano de implementacao |
+| `hacker-subagent-driven-development` | Executa plano com subagentes independentes |
+| `hacker-tests` | Validacao pos-implementacao (perfil + SUNSET + rede) |
+| `hacker-doc-sync` | Sincroniza documentacao com o diff da mudanca |
+| `hacker-finishing-branch` | Finaliza ciclo: git diff, PR, opcoes de merge |
+| `hacker-harness-sync` | Verifica e reconcilia o harness (lei F10) |
+| `hacker-trust-ledger-update` | Registra vereditos no Trust Ledger (lei F11) |
+| `hacker-postmortem-to-law` | Converte erro de processo em lei (lei F12) |
+| `hacker-pre-flight-verification` | Verificacao primaria antes de CADA operacao de rede |
+| `hacker-web-scan-validation` | Valida capability de scan web + relatorio tecnico |
+| `hacker-etico` | Meta-skill: contexto completo do projeto |
+| `disciplina-epistemica` | Disciplina epistemica (ativacao transversal) |
+
+### Agentes opencode (4)
+
+| Agente | Papel |
+|---|---|
+| `orquestrador` | Agente principal (papel primario) |
+| `implementador` | Subagente: executa tarefas atomicas |
+| `revisor` | Subagente: revisao independente (two-stage) |
+| `documentador` | Subagente: doc-sync no final do pipeline |
+
+### Agentes operacionais .hacker/ (6)
+
+| Agente | Especialidade |
+|---|---|
+| `red-team` | Reconhecimento e exploracao |
+| `blue-team` | Defesa e deteccao |
+| `pentest` | Explotacao e pivotamento |
+| `scraping` | OSINT e coleta de dados |
+| `web-scanner` | Scan de aplicacoes web |
+| `orquestrador-pipeline` | Supervisor de operacoes |
+
+### Memoria de longo prazo (ai-memory)
+
+Este projeto utiliza [ai-memory](https://github.com/akitaonrails/ai-memory) de
+Fabio Akita (akitaonrails) como camada de memoria de longo prazo e handoff entre
+sessoes e IDEs.
+
+- **Container:** `ai-memory` (imagem `akitaonrails/ai-memory:latest`)
+- **Endpoint:** `127.0.0.1:49374` (loopback only)
+- **Modo:** zero-LLM (consolidacao rule-based, sem chamadas a LLM externa)
+- **Config:** `.ai-memory.toml` na raiz do repo (workspace "hacker",
+  ignore_paths para ledger/env/opsec/reports)
+- **Integracao:** MCP registrado no `opencode.json`, plugin em
+  `~/.config/opencode/plugins/ai-memory.ts`
+
+Creditos: [github.com/akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory)
+
+## Invariantes
+
+- Cadeia de protecao validada ANTES de qualquer acao de rede
+- Sem IP real de origem em relatorios, ledger, memoria ou templates
+- Uso etico: apenas lab autorizado e pesquisas com escopo formal
+- Escopo definido pelo Fernando; HITL em pontos criticos (classe C)
+- Git de escrita: exclusivo do Fernando
+
+## Detalhes
+
+- Harness de comportamento do agente: `AGENTS.md`
+- Regras canonicas: `.opencode/rules/`
+- Registro cronologico: `LEDGER.md`
+- Harness operacional: `.hacker/README.md`
+- Ambiente de protecao: `~/opsec/README.md`
+
+## Creditos
+
+- Neste projeto estou usando o [ai-memory](https://github.com/akitaonrails/ai-memory)
+  desenvolvido por Fabio Akita (akitaonrails) para agregar valor e manter historico entre sessões e retomada de sessões, anda estou testando esse projeto dele aparentemente muito bom, efciente e resolve o problema de memoria entre sessões! 
