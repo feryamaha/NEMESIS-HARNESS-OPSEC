@@ -24,6 +24,23 @@ input do usuario ate a PARADA UNICA, sem pausas intermediarias.
 - Revisao independente: subagente `revisor` (deve rodar as validacoes ele mesmo)
 - Atualizacao de docs ao final: subagente `documentador` (doc-sync)
 
+## Delegacao Dinamica
+
+O orquestrador lê o input do usuário e dinamicamente determina quais subagentes são necessários baseado no tipo de task:
+- Se spec requer rede → despacha implementador + revisor + pre-flight checker
+- Se spec é apenas docs → despacha apenas documentador
+- Se spec é complexa (múltiplos arquivos, múltiplas skills) → despacha múltiplos workers em paralelo
+- Sintetiza os resultados de todos os workers no relatório consolidado
+- Delegação baseada no input, não no plano pré-definido
+
+## Limites de Autoridade
+
+- O orquestrador delega, mas não decide escopo
+- O Loop itera, mas não autoriza ações de classe C
+- O Routing direciona, mas não altera o escopo definido pelo Fernando
+- O HARNESS GUARDIAN pode parar tudo se a cadeia quebrar
+- Fernando permanece como DECISOR E ARQUITETO UNICO
+
 ## Invariantes
 
 1. Cadeia de protecao validada ANTES de qualquer acao de rede:

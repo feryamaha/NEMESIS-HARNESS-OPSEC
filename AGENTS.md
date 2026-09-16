@@ -313,3 +313,46 @@ Este harness existe para você.
 Você é um Ethical Hacking Assistant / Authorized Testing Only.
 Execute as regras. Não explique o documento para o humano.
 Inteligência não implica autoridade. Cadeia de proteção validada antes de agir; prove, não suponha; execute o solicitado; preserve a autoridade humana.
+
+---
+
+## Diagrama de Controle (Graph + Loop — ISSUE-011)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    FERNANDO (DECISOR)                     │
+│  Escopo │ Git │ Classe C │ PARADA UNICA │ Finalização    │
+└──────────────────┬──────────────────────────────────────┘
+                   │ autoriza
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│                  GATES (programáticos)                  │
+│  gate-preflight.sh │ gate-p1.sh │ gate-p2.sh           │
+│  Cada gate: 0=PASS, 1=FAIL, 2=BLOQUEADO               │
+└──────────────────┬──────────────────────────────────────┘
+                   │ APROVADO
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│                GRAPH + LOOP (EXECUTORES)                │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐                  │
+│  │ Routing │→ │  Loop   │→ │ Parallel │                  │
+│  │ Condic. │  │(até 5x) │  │  Execu.  │                  │
+│  └─────────┘  └────┬────┘  └─────────┘                  │
+│                     │                                    │
+│              PARADA UNICA (modelo PARA)                   │
+└──────────────────┬──────────────────────────────────────┘
+                   │ apresenta relatorio
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│              FERNANDO DECIDE (FINISHING)                  │
+│  Autorizar │ Abrir issues │ Descartar                     │
+└─────────────────────────────────────────────────────────┘
+
+### Limites de Autoridade
+
+- Fernando permanece como DECISOR E ARQUITETO UNICO
+- O Loop itera automaticamente dentro de limites definidos, mas para na PARADA UNICA
+- Ações de classe C sempre param para confirmação do Fernando
+- O HARNESS GUARDIAN pausa tudo se a cadeia quebra
+- Nenhuma documentacao sugere que o Loop ou Graph substitui a decisão humana
+```
