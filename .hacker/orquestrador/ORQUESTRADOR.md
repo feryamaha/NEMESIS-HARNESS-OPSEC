@@ -46,3 +46,19 @@ MISSAO → Planejamento (RAG) → [Gate] → Operacao(N) → Agente relata
 ```
 
 Cada seta e auditavel: se o gate falhou, a operacao e invalida.
+## Parallelization (Anthropic Pattern 3)
+
+O pipeline operacional 5-etapas inclui paralelismo:
+- Etapa 1 (Scraping) e Etapa 2 (Reconhecimento de Rede) executam em paralelo
+- Merge point: web-scanner recebe resultados de ambas as etapas paralelas
+- Etapa 3 (Pentest) e Etapa 4 (Reconfirmacao) permanecem sequenciais (dependencia de dados)
+- Etapa 5 (Blue-team) inicia quando ambas as entradas (pentest + reconfirmacao) estao prontas
+- Waves: tarefas com arquivos disjuntos e sem dependencia executam simultaneamente
+
+## Limites de Autoridade
+
+- O orquestrador delega, mas nao decide escopo
+- O Loop itera, mas nao autoriza acoes de classe C
+- O Routing direciona, mas nao altera o escopo definido pelo Fernando
+- O HARNESS GUARDIAN pode parar tudo se a cadeia quebrar
+- Nenhuma documentacao sugere que o Loop ou Graph substitui a decisao humana
