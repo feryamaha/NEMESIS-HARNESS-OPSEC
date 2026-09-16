@@ -1,0 +1,4 @@
+workspace = "hacker"
+
+[capture]
+ignore_paths = [".hacker/ledger/**", ".env", "**/.env", "~/opsec/**", "**/reports/**"]

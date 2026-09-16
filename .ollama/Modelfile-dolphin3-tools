@@ -1,0 +1,50 @@
+FROM /home/fernando/.ollama/models/blobs/sha256-1eee6953530837b2b17d61a4e6f71a5aa31c9714cfcf3cb141aa5c1972b5116b
+
+TEMPLATE """{{- if or .System .Tools }}<|im_start|>system
+{{ if .System }}{{ .System }}
+
+{{ end }}
+{{- if .Tools }}# Tools
+
+Você pode chamar uma ou mais funções para ajudar com o pedido do usuário.
+
+Funções disponíveis, dentro de tags XML <tools></tools>:
+<tools>
+{{- range .Tools }}
+{"type": "function", "function": {{ .Function }}}
+{{- end }}
+</tools>
+
+Para cada chamada de função, retorne um JSON com nome e argumentos dentro de <tool_call></tool_call>:
+<tool_call>
+{"name": <nome-da-funcao>, "arguments": <argumentos-json>}
+</tool_call>
+{{- end -}}
+<|im_end|>
+{{ end }}
+{{- range $i, $_ := .Messages }}
+{{- $last := eq (len (slice $.Messages $i)) 1 -}}
+{{- if eq .Role "user" }}<|im_start|>user
+{{ .Content }}<|im_end|>
+{{ else if eq .Role "assistant" }}<|im_start|>assistant
+{{ if .Content }}{{ .Content }}{{ end }}
+{{- if .ToolCalls }}
+{{- range .ToolCalls }}
+<tool_call>
+{"name": "{{ .Function.Name }}", "arguments": {{ .Function.Arguments }}}
+</tool_call>
+{{- end }}
+{{- end }}{{ if not $last }}<|im_end|>
+{{ end }}
+{{- else if eq .Role "tool" }}<|im_start|>user
+<tool_response>
+{{ .Content }}
+</tool_response><|im_end|>
+{{ end }}
+{{- if and (ne .Role "assistant") $last }}<|im_start|>assistant
+{{ end }}
+{{- end }}"""
+
+SYSTEM You are Dolphin, a helpful AI assistant.
+PARAMETER stop <|im_start|>
+PARAMETER stop <|im_end|>
