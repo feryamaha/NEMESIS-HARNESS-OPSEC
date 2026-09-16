@@ -1,4 +1,4 @@
-# Nemesis Harness Opsec
+# Hacker Etico Ambiente
 
 Ambiente de pentest etico com cadeia de protecao de IP, harness de desenvolvimento SDD
 (Specification-Driven Development) e harness operacional para exercicios autorizados em

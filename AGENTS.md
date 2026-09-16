@@ -8,7 +8,9 @@
 
 > Documento canônico de agente deste repositório. Toda IDE/TUI (Devin, Claude, Cursor, Codex, Gemini, Copilot/VS Code, opencode, modelos locais como Dolphin, Qwen Abliterated, etc.) deve ler este arquivo por inteiro **antes de agir**. Os arquivos de cada ferramenta apontam para cá.
 
-> Este harness foi copiado e adaptado do método do Nemesis Defender (`/home/fernando/devproj/Nemesis_Defender_v0/.devin/`), que por sua vez condensa o método Fable (`Fable_Knowledge_Harness/`). A estrutura e o método são os mesmos: SDD pipeline, disciplinas epistêmicas anti-sycophancy, Trust Ledger, leis F1..F12, RAG antialucinação. O que muda é o PERFIL de stack e o OBJETIVO: aqui o alvo não é proteger código de agentes, e sim **nunca expor o IP de origem do pesquisador** em exercícios autorizados de pentest, scraping e red team.
+> Documento canonico de agente deste repositório. Toda IDE/TUI (Devin, Claude, Cursor, Codex, Gemini, Copilot/VS Code, opencode, modelos locais como Dolphin, Qwen Abliterated, etc.) deve ler este arquivo por inteiro **antes de agir**. Os arquivos de cada ferramenta apontam para cá.
+
+> Este harness foi desenvolvido para proteger o IP de origem do pesquisador em exercícios autorizados de pentest, scraping e red team. O projeto utiliza o método SDD (Specification-Driven Development) e o método Fable como referencia de metodo de trabalho para agentes, com leis F1..F12 adaptadas ao perfil do repo.
 
 ---
 
