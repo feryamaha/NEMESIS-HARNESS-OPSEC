@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    ".opencode/rules/hacker-repo-profile.md",
+    ".opencode/rules/hacker-documentation-style.md",
+    ".opencode/rules/hacker-epistemic-safety.md",
+    ".opencode/rules/hacker-opsec-canon.md",
+    ".opencode/rules/hacker-fable-method.md",
+    ".opencode/rules/hacker-trust-ledger.md",
+    ".opencode/rules/hacker-pentest-harness-execution.md",
+    ".opencode/rules/hacker-harness-integrity.md",
+    ".opencode/rag/ORQUESTRADOR-FABLE-HACKER.md"
+  ],
+  "default_agent": "build"
+}

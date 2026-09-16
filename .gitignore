@@ -1,0 +1,84 @@
+# =====================================================
+# GITIGNORE - Segurança GitHub (Regras Oficiais)
+# =====================================================
+# Fonte: GitHub Docs + gitignore.io + github/gitignore
+# Regra: NUNCA versionar credenciais, dados pessoais ou info confidencial
+
+# --- CREDENCIAIS / SECRETS (GitHub proíbe) ---
+*.env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*.wg
+*.p12
+*.pfx
+*.jks
+*.cert
+*.csr
+
+# --- LOGS ---
+*.log
+logs/
+
+# --- TEMPORÁRIOS ---
+*.tmp
+*.bak
+*.swp
+*~
+.cache/
+*.pyc
+__pycache__/
+
+# --- BINÁRIOS ---
+*.exe
+*.dll
+*.so
+*.dylib
+
+# --- CONFIG LOCAIS ---
+.vscode/
+.idea/
+*.code-workspace
+*.iml
+
+# --- DOCKER ---
+volumes/
+*.volume
+
+# --- ATESTADOS (gerados por scripts) ---
+atestado_ambiente_*.txt
+
+# --- TESTES TEMPORÁRIOS ---
+teste/
+
+# =====================================================
+# DADOS SENSÍVEIS - NÃO VERSIONAR
+# =====================================================
+# Regra GitHub: NUNCA empurre credenciais, mesmo em repo privado
+
+# --- LEDGER RAIZ (contém IP real do pesquisador) ---
+LEDGER.md
+
+# --- LEDGER DE OPERAÇÕES (nomes de alvos, IPs, detalhes) ---
+.hacker/ledger/operacoes.md
+
+# --- RELATÓRIOS DE OPERAÇÕES EXTERNAS ---
+# Contêm: nomes de empresas, URLs de alvos, vulnerabilidades,
+# emails de terceiros, IPs de servidores alvo
+.hacker/reports/OP-*.md
+.hacker/reports/artefatos/
+
+# --- SPECS COM NOMES DE ALVOS ---
+.opencode/specs/SPEC_013_waf-bypass-pentest.md
+
+# =====================================================
+# NOTA: ~/opsec/.env está FORA do workspace
+# =====================================================
+# O arquivo ~/opsec/.env contém credenciais reais
+# mas está fora deste repositório, então não precisa
+# estar no .gitignore (já está protegido por estar
+# em outro diretório)
