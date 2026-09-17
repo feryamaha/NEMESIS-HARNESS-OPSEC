@@ -31,6 +31,18 @@ O projeto possui duas camadas distintas e complementares:
 A integracao entre as camadas e via cross-references: `.hacker/` referencia `.opencode/rules/`
 para regras e `.opencode/plans/` para planos de referencia.
 
+## Proteções do próprio agente (Agentic Hardening)
+
+Além da forte OPSEC do operador, o harness implementa proteções internas contra os principais vetores de ataque a sistemas agentic:
+
+- **Modelagem da superfície de ataque** do próprio agente (5 perguntas do guia)
+- **Logging estruturado** de toda tool call (formato NDJSON)
+- **Sanitização de output** contra Indirect Prompt Injection
+- **Suite de testes comportamentais** do próprio agente
+- Detecção de desvios de escopo amarrada aos gates existentes
+
+Essas proteções aumentam a robustez, a rastreabilidade e a redução de falso positivo das operações ofensivas.
+
 ## Estrutura do repositorio
 
 ```
@@ -62,7 +74,7 @@ hacker-etico-ambiente/
 │   ├── rag/                          Conhecimento (OWASP, MITRE, canon interno)
 │   ├── templates/                    Operacao, contrato de handoff, relatorio
 │   ├── reports/                      Relatorios operacionais de exercicios
-│   ├── scripts/                      runner.sh, validar-scan-web.sh
+│   ├── scripts/                      runner.sh, validar-scan-web.sh, tool-logger.sh, tool-sanitizer.sh, test-agente-behavior.sh
 │   └── README.md                     Manifesto do harness operacional
 │
 └── ~/opsec/                          Ambiente de protecao (fora do repo)

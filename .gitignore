@@ -63,6 +63,9 @@ teste/
 # --- LEDGER RAIZ (contém IP real do pesquisador) ---
 LEDGER.md
 
+# --- LOGS DE TOOL CALLS (NDJSON por sessao) ---
+.hacker/logs/
+
 # --- LEDGER DE OPERAÇÕES (nomes de alvos, IPs, detalhes) ---
 .hacker/ledger/operacoes.md
 
