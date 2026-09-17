@@ -151,3 +151,19 @@ O agente NUNCA recebe o IP real de origem. Em relatorios e registros:
 O orquestrador aplica este gate ANTES de cada operacao de rede, antes de despachar ao agente.
 O runner (`.hacker/scripts/runner.sh`) valida o gate comportamental antes do fechamento do ciclo. O enforcement fisico (x-bit) e responsabilidade da ISSUE-001.
 A operacao e invalida se o gate nao for executado.
+## HARNESS GUARDIAN (Camada Final de Protecao do Controle Humano)
+
+O HARNESS GUARDIAN e a camada final de protecao do controle humano. Se a cadeia quebra, o Loop e o Graph sao pausados automaticamente. Nenhum mecanismo de automacao sobrepoe o gate.
+
+- O HARNESS GUARDIAN monitora a cadeia de protecao (verificar-vazamento.sh GOOD)
+- Se a cadeia muda de GOOD para LEAK durante o Loop -> HARNESS GUARDIAN pausa tudo
+- O Loop itera, mas nao autoriza acoes de classe C
+- O Routing direciona, mas nao altera o escopo definido pelo Fernando
+- O orquestrador delega, mas nao decide escopo
+- Fernando permanece como DECISOR E ARQUITETO UNICO — o Graph/Loop sao ferramentas de execucao dentro do escopo autorizado
+
+```bash
+# Verificacao do HARNESS GUARDIAN
+bash .hacker/scripts/gate-preflight.sh
+# 0=PASS (cadeia ativa), 1=FAIL (cadeia comprometida)
+```

@@ -24,6 +24,34 @@ input do usuario ate a PARADA UNICA, sem pausas intermediarias.
 - Revisao independente: subagente `revisor` (deve rodar as validacoes ele mesmo)
 - Atualizacao de docs ao final: subagente `documentador` (doc-sync)
 
+## Delegacao Dinamica
+
+O contrato executavel desta decisao e
+`python3 .hacker/scripts/graph-loop.py delegate --spec <spec> --complexity <simples|complexa>`.
+Ele retorna JSON com rota, guardas e workers propostos. Quando a entrada possui a secao
+`WORKERS`, essa lista prevalece e torna a decomposicao dependente do input, conforme o padrao
+orchestrator-workers. O orquestrador ainda valida escopo e preserva a decisao humana para classe C.
+
+Para jobs independentes explicitamente autorizados, o executor usa
+`python3 .hacker/scripts/graph-loop.py parallel --job nome=comando`; ele inicia os processos,
+aguarda todos e retorna falha quando qualquer job falha. O comando nao define alvo, escopo ou
+autorizacao de rede.
+
+O orquestrador lê o input do usuário e dinamicamente determina quais subagentes são necessários baseado no tipo de task:
+- Se spec requer rede → despacha implementador + revisor + pre-flight checker
+- Se spec é apenas docs → despacha apenas documentador
+- Se spec é complexa (múltiplos arquivos, múltiplas skills) → despacha múltiplos workers em paralelo
+- Sintetiza os resultados de todos os workers no relatório consolidado
+- Delegação baseada no input, não no plano pré-definido
+
+## Limites de Autoridade
+
+- O orquestrador delega, mas não decide escopo
+- O Loop itera, mas não autoriza ações de classe C
+- O Routing direciona, mas não altera o escopo definido pelo Fernando
+- O HARNESS GUARDIAN pode parar tudo se a cadeia quebrar
+- Fernando permanece como DECISOR E ARQUITETO UNICO
+
 ## Invariantes
 
 1. Cadeia de protecao validada ANTES de qualquer acao de rede:

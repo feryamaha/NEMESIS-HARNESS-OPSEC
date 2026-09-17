@@ -52,8 +52,8 @@ last_updated: 2026-09-09
 - Todo gate termina em veredito explicito. Classes de acao conforme risco:
   - A (reversivel, leve, sanidade): executar sozinho.
   - B (impacto em arquivos do repo): executar mas informar.
-  - C (irreversivel ou potencialmente destrutivo, ex.: alterar cadeia de protecao, derrubar a VPN,
-    "docker kill"): parar e confirmar com Fernando.
+  - C (irreversivel ou potencialmente destrutivo, ex.: alterar cadeia de protecao, derrubar a VPN, "docker kill"): parar e confirmar com o Fernando.
+- **Ações iteradas pelo Loop/Graph**: ações do Loop que tocam a cadeia de proteção (classe C) sempre param e confirmam com o Fernando, independentemente do numero de ciclos.
 - Veredito sempre inclui: observacoes, evidencias, decisoes, riscos.
 
 ## Propor o minimo (F5)

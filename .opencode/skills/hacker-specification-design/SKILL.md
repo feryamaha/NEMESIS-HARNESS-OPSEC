@@ -88,7 +88,16 @@ o conteudo relevante (API atual, versao, breaking changes, padroes) para o conte
 externo: URL ou path da doc oficial) na secao CONTEXT. Spec que toca codigo do projeto ou
 tecnologia externa sem citar fonte consultada = AMBIGUA (nao PROSSEGUIR ate fundamentar).
 
-**1c. Pre-flight de postura (OBRIGATORIO):**
+**1c. Routing Condicional (obrigatorio):**
+
+Antes de gerar a especificacao, determinar a rota baseada na CATEGORY da spec:
+- CATEGORY = "Infra" + arquivos em `~/opsec/scripts/` → route para gate reforçado (classe C)
+- CATEGORY = "Docs" → route direto para documentador
+- CATEGORY = "Bugfix" → route para gate padrão + pre-flight F1
+- CATEGORY = "Feature" + toca cadeia → route para orquestrador + gate reforçado
+- CATEGORY = "Feature" + não toca cadeia → route padrão
+
+**1d. Pre-flight de postura (OBRIGATORIO):**
 
 Se a mudanca proposta tocar rede, a spec DEVE incluir na secao VALIDACAO/EXPECTED DELIVERY
 o comando `bash ~/opsec/scripts/verificar-vazamento.sh` com veredito GOOD como requisito.

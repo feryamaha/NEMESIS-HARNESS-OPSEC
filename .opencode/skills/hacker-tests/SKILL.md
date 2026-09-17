@@ -4,9 +4,10 @@ description: >
   Valida a implementacao apos a Skill 4: verificacao por mudanca do perfil (bash -n,
   shellcheck, py_compile, docker compose config, git diff --check), teste SUNSET, reexecucao
   apos fix, verificacao de postura de rede (verificar-vazamento.sh GOOD), e validacao do
-  mock/pentest conforme hacker-pentest-harness-execution.md. Fix autonomo de falhas com
-  maximo de 2 tentativas por falha, com reconciliacao de vereditos no Trust Ledger. Ao passar,
-  invoca hacker-doc-sync (4.6) automaticamente, sem pausa.
+  mock/pentest conforme hacker-pentest-harness-execution.md. Fix autonomo com loop
+  evaluator-optimizer (max 5 ciclos ate convergencia), com reconciliacao de vereditos no
+  Trust Ledger. Cada ciclo gera entrada no Trust Ledger. Ao passar, invoca hacker-doc-sync
+  (4.6) automaticamente, sem pausa.
 ---
 
 # Hacker Tests (Validacao Pos-Execucao)
@@ -23,6 +24,31 @@ no FIM da doc-sync, nao aqui.
 **Pre-requisito**: Todas as tarefas do PLAN foram completadas (Skill 4 concluida).
 
 ## Processo
+
+## Loop Evaluator-Optimizer (Fable Pattern 5)
+
+Para fluxos que exigem verificacao mecanica, usar
+`python3 .hacker/scripts/graph-loop.py loop --evaluator <comando> --ledger <arquivo>`.
+O comando emite `loop-ciclo=N`, aplica o limite informado e retorna exit code diferente de
+zero quando o avaliador nao converge. O stdout, stderr, exit code e SCORE do evaluator sao
+entregues ao generator via ambiente `EVALUATOR_*`; a skill define o criterio e o executor aplica o limite.
+
+O fix-loop segue o padrao evaluator-optimizer da Anthropic:
+- **Generator**: subagent implementador gera o fix
+- **Evaluator**: esta skill executa a bateria completa (bash -n, shellcheck, py_compile, docker compose config, git diff --check, verificar-vazamento.sh)
+- **Loop**: se FAIL → re-torna ao generator com o output do evaluator → generator ajusta → evaluator re-testa
+- **Critério de parada**: GOOD do `verificar-vazamento.sh` E todos os testes PASS, OU 5 ciclos sem melhoria mensuravel (convergência)
+- **Cada iteração gera entrada no Trust Ledger** (evento `loop-ciclo=N | resultado=...`)
+- **Ações de classe C (F4)**: independentemente do loop, sempre param e pedem Fernando
+
+### Limites do Loop
+
+- Loop itera maximo 5 ciclos (nao por limite arbitrario, mas por convergência)
+- Loop para na PARADA UNICA — o modelo PARA e apresenta o relatorio
+- Ações de classe C sempre param para confirmação do Fernando, independentemente do loop
+- Se a cadeia muda de GOOD para LEAK durante o Loop → HARNESS GUARDIAN pausa tudo
+- Loop nao faz commit de git, nao abre PR, nao decide escopo
+- O Loop é ferramenta de execução dentro do escopo autorizado, não operação independente
 
 **Regra geral da skill**: cada comando e executado individualmente. O proximo comando so e
 executado se o anterior passou. Se um comando falhar, NAO executar os subsequentes - ir para

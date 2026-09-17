@@ -48,64 +48,99 @@ bash ~/opsec/scripts/verificar-vazamento.sh
 5. **Skill 3: hacker-writing-plans** - PLAN com tarefas atomicas, gravado em `.opencode/plans/`.
 6. **Skill 0: hacker-critical-analysis (PONTO 2, pre-execucao)** - analise critica do plano.
    GATE AUTOMATICO: PROSSEGUIR executa; REJEITAR ajusta.
-7. **Skill 4: hacker-subagent-driven-development** - execucao tarefa a tarefa (two-stage
-   review); sem pausa entre tarefas.
+7. **Skill 4: hacker-subagent-driven-development** - execucao tarefa a tarefa (two-stage review); sem pausa entre tarefas.
 8. **Skill 4.5: hacker-tests** - validacoes do perfil (bash/python3/compose/git) + cadeia.
-   PASS: segue. FAIL: investigar causa raiz, corrigir, retestar (max 2 ciclos; se persistir,
-   PARADA DE EMERGENCIA logada no Trust Ledger e reporte ao Fernando).
+    PASS: segue. FAIL: loop evaluator-optimizer (max 5 ciclos ate convergencia); se persistir sem melhoria, PARADA DE EMERGENCIA logada no Trust Ledger e reporte ao Fernando.
 9. **Skill 4.6: hacker-doc-sync** - escrita automatica ao fim: se a mudanca toca docs/README
-   do harness, reconcilia (codigo = verdade, perfil como fonte); senao veredito "nada a
-   atualizar".
+    do harness, reconcilia (codigo = verdade, perfil como fonte); senao veredito "nada a
+    atualizar".
 10. **⛔ PARADA UNICA** - o modelo apresenta o relatorio consolidado (formato abaixo) e PARA.
     Nenhuma skill pos-validacao (5) executa sem autorizacao. HARD-GATE: Fernando decide.
 11. **Skill 5: hacker-finishing-branch** - so com autorizacao explicita do Fernando. Suite
     completa do perfil + PR documentada em `.opencode/pr/`. Disposicao do Fernando: finalizar
     ou abrir novas issues, PDCA.
 
+## Routing Condicional
+
+O gate binário (PROSSEGUIR/REJEITAR) é substituído por routing condicional baseado no tipo de spec:
+
+| CATEGORY da Spec | Rota | Observações |
+|---|---|---|
+| "Infra" + arquivos em `~/opsec/scripts/` | Gate reforçado (classe C, Fernando confirma) + pre-flight reforçado | Toca cadeia de proteção |
+| "Docs" | Route direto para documentador (sem gate de security) | Sem risco de segurança |
+| "Bugfix" | Gate padrão + pre-flight F1 | Fluxo normal |
+| "Feature" + toca cadeia | Orquestrador + gate reforçado | Escopo ampliado |
+| "Feature" + não toca cadeia | Route padrão | Fluxo normal |
+
+Cada categoria de spec tem rota definida. A classificacao mecanica e feita por
+`python3 .hacker/scripts/graph-loop.py route --spec <spec>`; a tabela permanece como
+contrato legivel e nao como executor.
+
+Para uma entrada com subtarefas dinamicas, declarar `## WORKERS` na spec e usar
+`delegate`; o resultado pode ser executado com jobs explicitos via `delegate --execute`.
+
+## Diagrama de Controle
+
+```
+FERNANDO (DECISOR) → GATES (gate-preflight.sh, gate-p1.sh, gate-p2.sh) → GRAPH + LOOP (executores) → PARADA UNICA → FERNANDO
+```
+
+- Fernando autoriza → Gates executáveis (código de saída: 0=PASS, 1=FAIL, 2=BLOQUEADO) → Loop itera (max 5 ciclos) → PARADA UNICA → Fernando decide
+- O Loop itera automaticamente dentro de limites definidos, mas para na PARADA UNICA
+- Ações de classe C sempre param para confirmação do Fernando
+- HARNESS GUARDIAN: se a cadeia quebra, Loop e Graph são pausados automaticamente
+
 ## Regras Fundamentais
 
 1. **Autonomia ate a PARADA UNICA, nunca alem dela.** Entre o input e o fim da Skill 4.6 nao
-   ha pausas para aprovacao. A PARADA UNICA e inegociavel: nenhuma skill pos-validacao (5)
-   e invocada automaticamente, nem "por conveniencia".
+    ha pausas para aprovacao. A PARADA UNICA e inegociavel: nenhuma skill pos-validacao (5)
+    e invocada automaticamente, nem "por conveniencia".
 2. **Gates automaticos nao sao decorativos.** A analise critica (Skill 0) e o rule control
-   (Skill 2) substituem a aprovacao humana intermediaria; por isso os vereditos deles
-   BLOQUEIAM de verdade. Veredito negativo permite UM ciclo de ajuste + re-analise; o
-   segundo veredito negativo vira PARADA DE EMERGENCIA (reportar ao Fernando com o veredito
-   e a evidencia).
-3. **Paradas de emergencia** (alem da PARADA UNICA): bloqueio persistente apos correcao;
-   mesma tarefa/falha apos 2 tentativas de fix; loop de testes FAIL apos 2 ciclos; escopo
-   real materialmente maior que a spec; qualquer acao irreversivel ou de rede nao prevista
-   no plano (classe C, F4); ambiguidade que genuinamente impede progresso. Nesses casos:
-   STOP, reportar o bloqueador exato com evidencia, aguardar o Fernando.
-4. **Evidencia real sempre.** git diff/log reais (referencia apenas; git de escrita e do
-   Fernando); numeros copiados da saida literal dos comandos desta sessao; falha reportada
-   com a mesma proeminencia que sucesso.
-5. **Fernando governa as decisoes humanas.** A PARADA UNICA, o finishing e a disposicao da
-   branch sao dele. Git de escrita e exclusivamente dele. So ele decide finalizar ou abrir
-   novas issues (PDCA).
-6. **Pre-flight e Trust Ledger (leis F1 e F11).** A Skill 4 abre com o pre-flight de postura
-   declarado por comando (Step 0 da skill e F1 deste workflow). Cada gate (Skill 0 P1/P2,
-   Skill 2) anota os campos do veredito; na PARADA UNICA a `hacker-trust-ledger-update`
-   grava todas as entradas do ciclo (append-only em `.opencode/ledger/trust-ledger.md`) e o
-   relatorio consolidado inclui a secao Trust Ledger.
-7. **Gate de harness (lei F10).** Se o git diff do ciclo toca arquivos do harness
-   (`.opencode/`, `AGENTS.md`), o procedimento de `hacker-harness-integrity.md` precisa
-   retornar HARNESS INTEGRO antes do finishing (Step 1.5 da Skill 5); deriva reconcilia-se
-   via `hacker-harness-sync`.
-8. **Distribuicao por camadas de raciocinio.** O pipeline e executado por um ORQUESTRADOR
-   (o modelo principal da sessao) que distribui fases a subagentes dedicados. Julgamento,
-   gates, PARADA UNICA e Trust Ledger NUNCA se delegam. (Secao "Distribuicao de modelos".)
-9. **Roteamento por modulo (pre-flight).** No pre-flight, o orquestrador deriva dos paths da
-   spec o(s) modulo(s) da cadeia no canon (`.opencode/rules/hacker-opsec-canon.md`) e carrega
-   as guardas no contrato de handoff. Modulos sensiveis (scripts de protecao,
-   `docker-compose.yml`, classe C) recebem atencao reforcada: tocar a cadeia exige
-   confirmacao do Fernando.
-10. **RAG (lei F6).** O Step 1.5 da Skill 1 e obrigatorio: consultar (a) a doc canonica
+    (Skill 2) substituem a aprovacao humana intermediaria; por isso os vereditos deles
+    BLOQUEIAM de verdade. Os gates agora sao scripts executaveis (.hacker/scripts/gate-*.sh)
+    com codigo de saida: 0=PASS, 1=FAIL, 2=BLOQUEADO. Veredito negativo permite UM ciclo de
+    ajuste + re-analise; o segundo veredito negativo vira PARADA DE EMERGENCIA.
+3. **Loop Evaluator-Optimizer (Fable Pattern 5)**. O fix-loop itera automaticamente até convergência
+    (GOOD + todos PASS) ou 5 ciclos sem melhoria mensurável. Cada ciclo gera entrada no Trust Ledger.
+    Ações de classe C sempre param para confirmação do Fernando.
+4. **Paradas de emergencia** (alem da PARADA UNICA): bloqueio persistente apos correcao;
+    loop de evaluator-optimizer sem convergencia apos 5 ciclos; escopo real materialmente maior
+    que a spec; qualquer acao irreversivel ou de rede nao prevista no plano (classe C, F4);
+    ambiguidade que genuinamente impede progresso. Nesses casos: STOP, reportar o bloqueador
+    exato com evidencia, aguardar o Fernando.
+5. **Evidencia real sempre.** git diff/log reais (referencia apenas; git de escrita e do
+    Fernando); numeros copiados da saida literal dos comandos desta sessao; falha reportada
+    com a mesma proeminencia que sucesso.
+6. **Fernando governa as decisoes humanas.** A PARADA UNICA, o finishing e a disposicao da
+    branch sao dele. Git de escrita e exclusivamente dele. So ele decide finalizar ou abrir
+    novas issues (PDCA).
+7. **Pre-flight e Trust Ledger (leis F1 e F11).** A Skill 4 abre com o pre-flight de postura
+    declarado por comando (Step 0 da skill e F1 deste workflow). Cada gate (Skill 0 P1/P2,
+    Skill 2) anota os campos do veredito; na PARADA UNICA a `hacker-trust-ledger-update`
+    grava todas as entradas do ciclo (append-only em `.opencode/ledger/trust-ledger.md`) e o
+    relatorio consolidado inclui a secao Trust Ledger.
+8. **Gate de harness (lei F10).** Se o git diff do ciclo toca arquivos do harness
+    (`.opencode/`, `AGENTS.md`), o procedimento de `hacker-harness-integrity.md` precisa
+    retornar HARNESS INTEGRO antes do finishing (Step 1.5 da Skill 5); deriva reconcilia-se
+    via `hacker-harness-sync`.
+9. **Distribuicao por camadas de raciocinio.** O pipeline e executado por um ORQUESTRADOR
+    (o modelo principal da sessao) que distribui fases a subagentes dedicados. Julgamento,
+    gates, PARADA UNICA e Trust Ledger NUNCA se delegam. (Secao "Distribuicao de modelos".)
+10. **Roteamento por modulo (pre-flight).** No pre-flight, o orquestrador deriva dos paths da
+    spec o(s) modulo(s) da cadeia no canon (`.opencode/rules/hacker-opsec-canon.md`) e carrega
+    as guardas no contrato de handoff. Modulos sensiveis (scripts de protecao,
+    `docker-compose.yml`, classe C) recebem atencao reforcada: tocar a cadeia exige
+    confirmacao do Fernando.
+11. **RAG (lei F6).** O Step 1.5 da Skill 1 e obrigatorio: consultar (a) a doc canonica
     interna (`hacker-opsec-canon.md`, `~/opsec/README.md`) e (b) a doc oficial externa das
      tecnologias (WireGuard, ProtonVPN, Tor, gluetun, Docker, Systemd-resolved, ferramentas de pentest),
     com re-injecao no CONTEXT da spec. Hierarquia de fontes (onde divergirem, o de cima
     manda): codigo real em `~/opsec/scripts/` e compose; doc canonica interna; doc oficial
     externa; regras e metodo. Ver `hacker-opsec-canon.md` e `hacker-fable-method.md` F6.
+
+12. **Gates programaticos (F10)**. Os gates agora sao scripts executaveis: `gate-preflight.sh`,
+    `gate-p1.sh`, `gate-p2.sh` em `.hacker/scripts/`. O pipeline os chama, nao verifica texto.
+    Cada gate retorna codigo de saida: 0=PASS, 1=FAIL, 2=BLOQUEADO.
 
 ## Distribuicao de modelos por camada de raciocinio (orquestracao de subagentes)
 

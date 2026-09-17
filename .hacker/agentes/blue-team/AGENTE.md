@@ -71,3 +71,14 @@ bash ~/opsec/scripts/verificar-vazamento.sh
 ## Formato do relatorio
 
 Usar `templates/TEMPLATE-RELATORIO.md`.
+
+## Padrões Graph+Loop
+
+Este agente opera sob os padrões Graph+Loop implementados no projeto:
+
+- **Loop evaluator-optimizer**: Validação iterativa de remediação com feedback via `graph-loop.py loop` (generator ↔ evaluator com EVALUATOR_* variables). O loop itera até convergência (max_cycles, max_stagnant).
+- **Routing**: Classificação por CATEGORY (infra/docs/bugfix/feature) com guard apropriado.
+- **Delegação dinâmica**: Workers para sub-tarefas de hardening via seção WORKERS da spec.
+- **Paralelismo**: Tarefas independentes de hardening executam em paralelo via `graph-loop.py parallel`.
+
+Executor: `.hacker/scripts/graph-loop.py`
