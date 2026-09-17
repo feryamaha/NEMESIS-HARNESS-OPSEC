@@ -1,6 +1,7 @@
 # Nemesis Harness Opsec
 
-![NEMESIS-HARNESS-OPSEC](.opencode/assets/img/folder-logo.png)
+![NEMESIS-HARNESS-OPSEC](.opencode/assets/img/folder-logo.jpg
+)
 
 Harness ofensivo ético com forte OPSEC que orquestra agentes de IA para executar scraping, web scan, pentest, red team e blue team em alvos autorizados, gerando relatórios estruturados e atestados técnicos de vulnerabilidades.
 
