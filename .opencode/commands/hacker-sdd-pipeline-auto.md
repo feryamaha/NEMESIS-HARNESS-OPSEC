@@ -72,7 +72,12 @@ O gate binário (PROSSEGUIR/REJEITAR) é substituído por routing condicional ba
 | "Feature" + toca cadeia | Orquestrador + gate reforçado | Escopo ampliado |
 | "Feature" + não toca cadeia | Route padrão | Fluxo normal |
 
-Cada categoria de spec tem rota definida e executável. O routing é verificado pelo F10 (harness-integrity).
+Cada categoria de spec tem rota definida. A classificacao mecanica e feita por
+`python3 .hacker/scripts/graph-loop.py route --spec <spec>`; a tabela permanece como
+contrato legivel e nao como executor.
+
+Para uma entrada com subtarefas dinamicas, declarar `## WORKERS` na spec e usar
+`delegate`; o resultado pode ser executado com jobs explicitos via `delegate --execute`.
 
 ## Diagrama de Controle
 

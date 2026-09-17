@@ -26,6 +26,17 @@ input do usuario ate a PARADA UNICA, sem pausas intermediarias.
 
 ## Delegacao Dinamica
 
+O contrato executavel desta decisao e
+`python3 .hacker/scripts/graph-loop.py delegate --spec <spec> --complexity <simples|complexa>`.
+Ele retorna JSON com rota, guardas e workers propostos. Quando a entrada possui a secao
+`WORKERS`, essa lista prevalece e torna a decomposicao dependente do input, conforme o padrao
+orchestrator-workers. O orquestrador ainda valida escopo e preserva a decisao humana para classe C.
+
+Para jobs independentes explicitamente autorizados, o executor usa
+`python3 .hacker/scripts/graph-loop.py parallel --job nome=comando`; ele inicia os processos,
+aguarda todos e retorna falha quando qualquer job falha. O comando nao define alvo, escopo ou
+autorizacao de rede.
+
 O orquestrador lê o input do usuário e dinamicamente determina quais subagentes são necessários baseado no tipo de task:
 - Se spec requer rede → despacha implementador + revisor + pre-flight checker
 - Se spec é apenas docs → despacha apenas documentador

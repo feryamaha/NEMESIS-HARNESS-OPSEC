@@ -358,6 +358,67 @@ Ao final do pipeline completo, registrar entrada consolidada:
 
 ---
 
+## Integracao Graph+Loop
+
+O pipeline operacional incorpora os 6 nos do Graph para dar determinismo, automatizacao e bloqueio de operacoes nao autorizadas. Cada no e aplicado em pontos especificos do fluxo de 5 etapas.
+
+### ROUTING (classificacao da operacao)
+
+Antes de cada etapa, o orquestrador classifica a operacao via `graph-loop.py route`:
+- **CATEGORY = "Infra"** com arquivos em `~/opsec/scripts/` ou `docker-compose.yml` → rota `reforcado`, guard `reforcado`
+- **CATEGORY = "Feature"** com FILES INVOLVED sensiveis → rota `orquestrador`, guard `reforcado`
+- **CATEGORY = "Bugfix"** → rota `padrao`, guard `preflight-f1`
+- **CATEGORY = "Docs"** → rota `documentacao`, guard `nenhum`
+
+Aplicacao no pipeline: Etapa 1 (scraping) classifica como operacao de coleta; Etapa 3 (pentest) classifica como operacao de exploracao sensivel.
+
+### DELEGACAO (selecao de agentes)
+
+O orquestrador despacha agentes via `graph-loop.py delegate`, lendo a secao WORKERS da spec:
+- **Etapa 1**: delega para `scraping` (WORKERS declarados na spec)
+- **Etapa 2**: delega para `web-scanner`
+- **Etapa 3**: delega para `pentest`
+- **Etapa 4**: delega para `web-scanner` (reconfirmacao)
+- **Etapa 5**: delega para `blue-team`
+
+WORKERS explicitos na spec prevalecem sobre os defaults. Para operacoes sensiveis, `preflight-checker` e adicionado automaticamente.
+
+### PARALELIZACAO (execucao de varreduras independentes)
+
+As etapas 1 (scraping) e 2 (web-scanner) executam em paralelo quando os arquivos sao disjuntos:
+```bash
+python3 .hacker/scripts/graph-loop.py parallel --job "scraping=curl -s --socks5-hostname 127.0.0.1:9050 ALVO" --job "nmap=nmap -sS ALVO"
+```
+Merge point: web-scanner recebe resultados de ambas as etapas paralelas. As etapas 3, 4 e 5 permanecem sequenciais (dependencia de dados).
+
+### GATES (P1, P2, pre-flight F1, HARNESS GUARDIAN)
+
+Cada etapa passa por gates antes de executar:
+- **Gate P1**: valida estrutura da spec (fontes F6 consultadas)
+- **Gate P2**: valida regras (areas sensiveis, confirmacao classe C)
+- **Pre-flight F1**: verifica cadeia (WireGuard wg0, torproxy-host, verificar-vazamento.sh GOOD)
+- **HARNESS GUARDIAN**: bloqueia operacoes nao autorizadas
+
+Aplicacao no pipeline: pre-flight executado ANTES de CADA etapa (secao "Pre-Flight Obrigatorio"). Gates P1/P2 executados na entrada de cada etapa sensivel.
+
+### EXECUCAO (workers e preflight-checker)
+
+Depois dos gates, os workers executam:
+- **implementador**: executa a tarefa principal da etapa (scraping, scan, pentest, reconfirmacao, correcao)
+- **revisor**: valida o resultado e conformidade
+- **preflight-checker**: re-verifica a cadeia antes de operacoes de rede (classe C)
+- **documentador**: atualiza relatorios em `.hacker/reports/`
+
+### LOOP (otimizacao iterativa)
+
+Para operações que requerem otimizacao iterativa (payloads, configuracao de scan, validacao de findings):
+```bash
+python3 .hacker/scripts/graph-loop.py loop --evaluator "python3 validador.py" --generator "python3 gerador.py" --max-cycles 5 --max-stagnant 3
+```
+Aplicacao no pipeline: Etapa 3 (pentest) usa loop para otimizar exploracoes; Etapa 5 (blue-team) usa loop para refinar remediacoes. Feedback via EVALUATOR_* variables.
+
+---
+
 ## Disciplina de Resposta
 
 - **Evidencia incompleta:** declare a incerteza. "O scan retornou X mas nao

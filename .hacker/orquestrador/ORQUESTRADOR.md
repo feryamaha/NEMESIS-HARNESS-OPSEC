@@ -62,3 +62,161 @@ O pipeline operacional 5-etapas inclui paralelismo:
 - O Routing direciona, mas nao altera o escopo definido pelo Fernando
 - O HARNESS GUARDIAN pode parar tudo se a cadeia quebrar
 - Nenhuma documentacao sugere que o Loop ou Graph substitui a decisao humana
+
+## Integração Graph+Loop
+
+O orquestrador usa os padrões Graph+Loop implementados no projeto para coordenar operações de hacking:
+
+### Como usar graph-loop.py
+
+**Routing (classificação de operações):**
+```bash
+python3 .hacker/scripts/graph-loop.py route --spec <spec-operacao.md>
+```
+- Classifica por CATEGORY (docs/infra/bugfix/feature/refactor)
+- Detecta sensibilidade em FILES INVOLVED (~/opsec/scripts/, docker-compose)
+- Retorna rota: documentação | padrão | reforçado | orquestrador
+- Retorna guard: nenhum | preflight-f1 | reforçado
+
+**Delegação (despacho dinâmico de agentes):**
+```bash
+python3 .hacker/scripts/graph-loop.py delegate --spec <spec-operacao.md> --complexidade simples
+```
+- Lê WORKERS da spec (seção WORKERS)
+- Deriva workers por defaults baseados em rota + complexidade
+- WORKERS explícitos da spec prevalecem sobre defaults
+- Opcionalmente executa jobs com --execute --job
+
+**Paralelização (execução de varreduras independentes):**
+```bash
+python3 .hacker/scripts/graph-loop.py parallel --job "nmap_scan=nmap -sS target" --job "masscan_scan=masscan target"
+```
+- Executa jobs independentes em paralelo via ThreadPoolExecutor
+- Aguarda todos completar; propaga falhas
+- Ideal para scraping e reconhecimento em paralelo
+
+**Loop evaluator-optimizer (otimização iterativa):**
+```bash
+python3 .hacker/scripts/graph-loop.py loop --evaluator "python3 validador.py" --generator "python3 gerador.py" --max-cycles 5 --max-stagnant 3
+```
+- Generator produz candidato (payload, configuração, finding)
+- Evaluator avalia candidato (SCORE, exit_code, stdout/stderr)
+- Feedback via EVALUATOR_* variables ao generator
+- Condições de parada: evaluator exit=0, melhoria detectada, max_cycles, max_stagnant
+
+### Diagrama do Graph para .hacker/
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ENTRADA: SPEC ou REQUEST DO FERNANDO                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GRAPH NODE 1: ROUTING (graph-loop.py route)                                 │
+│ • Classifica por CATEGORY (docs/infra/bugfix/feature/refactor)             │
+│ • Detecta sensibilidade em FILES INVOLVED (~/opsec/scripts/, docker-compose)│
+│ • Retorna rota: documentação | padrão | reforçado | orquestrador           │
+│ • Retorna guard: nenhum | preflight-f1 | reforçado                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────────────────┐
+│ ROTA: documentação            │   │ ROTA: padrão / reforçado / orquestrador│
+│ GUARD: nenhum                 │   │ GUARD: preflight-f1 / reforçado       │
+└───────────────────────────────┘   └───────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────────────────┐
+│ WORKER: documentador         │   │ GRAPH NODE 2: DELEGAÇÃO (delegate)    │
+│ • Atualiza docs .hacker/      │   │ • Lê WORKERS da spec                 │
+│ • Sem rede, sem sensibilidade │   │ • Deriva workers por defaults         │
+└───────────────────────────────┘   │ • Complexidade: simples | complexa   │
+                                    │ • Retorna payload {route, workers}    │
+                                    └───────────────────────────────────────┘
+                                                                    │
+                                    ┌───────────────────────────────┴───────────────┐
+                                    │                                               │
+                                    ▼                                               ▼
+                    ┌───────────────────────────────┐   ┌───────────────────────────────────────┐
+                    │ WORKERS (por defaults)        │   │ WORKERS (da spec WORKERS)             │
+                    │ • implementador               │   │ • Customizados por Fernando          │
+                    │ • revisor                     │   │ • Escopo explícito no arquivo         │
+                    │ • preflight-checker (sensitive)│   │ • Sobrepõem defaults                   │
+                    │ • documentador (complexa)     │   └───────────────────────────────────────┘
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GRAPH NODE 3: PARALELIZAÇÃO (parallel)                                      │
+│ • Executa workers independentes em paralelo (ThreadPoolExecutor)             │
+│ • Jobs: implementador, revisor, preflight-checker, documentador              │
+│ • Aguarda todos completar; propaga falhas                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GRAPH NODE 4: GATES (P1, P2, pre-flight F1)                                  │
+│ • Gate P1: validação de estrutura de spec                                    │
+│ • Gate P2: validação de regras (areas sensíveis, IPs, travessões)            │
+│ • Pre-flight F1: verificação de cadeia (WireGuard wg0, torproxy-host, leak) │
+│ • HARNESS GUARDIAN: bloqueio de operações não autorizadas                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┴───────────────┐
+                    │                               │
+                    ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────────────────┐
+│ FAIL: BLOQUEADO               │   │ PASS: PROSSEGUIR                      │
+│ • Registra no Trust Ledger    │   • Registra no Trust Ledger             │
+│ • Reporta falha ao Fernando   │   • Continua para execução               │
+└───────────────────────────────┘   └───────────────────────────────────────┘
+                                                            │
+                                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GRAPH NODE 5: EXECUÇÃO DE WORKERS (delegate --execute)                      │
+│ • Implementador: executa tarefa principal (pentest, scraping, scan)          │
+│ • Revisor: valida resultado e conformidade                                   │
+│ • Preflight-checker: re-verifica cadeia antes de rede (classe C)            │
+│ • Documentador: atualiza relatórios em .hacker/reports/                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                                            │
+                                                            ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ GRAPH NODE 6: LOOP EVALUATOR-OPTIMIZER (loop)                                │
+│ • Generator: produz candidato (payload, configuração, finding)              │
+│ • Evaluator: avalia candidato (SCORE, exit_code, stdout/stderr)             │
+│ • Feedback: EVALUATOR_* ao generator (iteração)                              │
+│ • Condições de parada: evaluator exit=0, melhoria detectada, max_cycles,    │
+│   max_stagnant                                                                 │
+│ • Ledger opcional: registra cada ciclo                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                    │                               │
+                    ▼                               ▼
+┌───────────────────────────────┐   ┌───────────────────────────────────────┐
+│ LOOP CONCLUIDO                │   │ LOOP PARADO                          │
+│ • SCORE satisfatório          │   • max_stagnant atingido               │
+│ • Registra em LEDGER-OPERACOES│   • max_cycles atingido                 │
+│ • Relatório final             │   • Registra no Trust Ledger             │
+└───────────────────────────────┘   └───────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ SAÍDA: RELATÓRIO EM .hacker/reports/ (OP-YYYYMMDD-XXX.md)                   │
+│ • Atestado de conformidade                                                   │
+│ • Findings validados                                                         │
+│ • Ledger de operações (append-only)                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Integração com Diagrama de Controle
+
+```
+FERNANDO (DECISOR) → GATES (gate-preflight.sh, gate-p1.sh, gate-p2.sh) → GRAPH + LOOP (executores) → PARADA UNICA → FERNANDO
+```
+
+- Fernando autoriza → Gates executáveis (código de saída: 0=PASS, 1=FAIL, 2=BLOQUEADO) → Loop itera (max 5 ciclos) → PARADA UNICA → Fernando decide
+- O Loop itera automaticamente dentro de limites definidos, mas para na PARADA UNICA
+- Ações de classe C sempre param para confirmação do Fernando
+- HARNESS GUARDIAN: se a cadeia quebra, Loop e Graph são pausados automaticamente

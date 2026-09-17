@@ -27,6 +27,12 @@ no FIM da doc-sync, nao aqui.
 
 ## Loop Evaluator-Optimizer (Fable Pattern 5)
 
+Para fluxos que exigem verificacao mecanica, usar
+`python3 .hacker/scripts/graph-loop.py loop --evaluator <comando> --ledger <arquivo>`.
+O comando emite `loop-ciclo=N`, aplica o limite informado e retorna exit code diferente de
+zero quando o avaliador nao converge. O stdout, stderr, exit code e SCORE do evaluator sao
+entregues ao generator via ambiente `EVALUATOR_*`; a skill define o criterio e o executor aplica o limite.
+
 O fix-loop segue o padrao evaluator-optimizer da Anthropic:
 - **Generator**: subagent implementador gera o fix
 - **Evaluator**: esta skill executa a bateria completa (bash -n, shellcheck, py_compile, docker compose config, git diff --check, verificar-vazamento.sh)
