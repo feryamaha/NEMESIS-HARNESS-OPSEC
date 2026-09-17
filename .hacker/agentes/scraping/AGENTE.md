@@ -78,3 +78,13 @@ Usar `templates/TEMPLATE-RELATORIO.md`.
 | Ferramenta | [curl, scrapy, playwright, requests] |
 | Quantidade | [registros encontrados] |
 | Fonte | [URL + headers observados] |
+
+## Padrões Graph+Loop
+
+Este agente opera sob os padrões Graph+Loop implementados no projeto:
+
+- **Routing**: Classificação para sources (URL, API, OSINT) via `graph-loop.py route`.
+- **Delegação por tipo de source**: Workers especializados (web, API, arquivo) via seção WORKERS da spec.
+- **Paralelismo**: Coleta de múltiplas sources em paralelo via `graph-loop.py parallel` (curl, scrapy, playwright).
+
+Executor: `.hacker/scripts/graph-loop.py`

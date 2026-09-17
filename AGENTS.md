@@ -52,8 +52,9 @@ Se a solicitação estiver fora de escopo formal, **PARE e pergunte** ao Fernand
 
 ## 3. Invariantes de segurança — antes de QUALQUER ação
 
-1. **NUNCA execute atividade de rede, pentest, scraping ou red team com o IP real exposto.**  
-   A cadeia de proteção (WireGuard local no host, Proton VPN, Tor, kill-switch, DNS sem leak, IPv6 off, sandbox) é PRE-REQUISITO, não opcional. Antes de QUALQUER atividade de hacking, o Fernando deve rodar `sudo bash ~/opsec/scripts/session-start-hacking-security.sh`. Validação falhou ou não executada = PARE e reporte. NUNCA prossiga protegendo-se "por suposição".
+1. **NUNCA execute atividade de rede operacional (pentest, scraping, red team) com o IP real exposto.**  
+   A cadeia de proteção (WireGuard local no host, Proton VPN, Tor, kill-switch, DNS sem leak, IPv6 off, sandbox) é PRE-REQUISITO para operações de hacking. Antes de QUALQUER atividade de hacking, o Fernando deve rodar `sudo bash ~/opsec/scripts/session-start-hacking-security.sh`. Validação falhou ou não executada = PARE e reporte. NUNCA prossiga protegendo-se "por suposição".
+   **Exceção:** URLs acessadas para manutenção, melhoria ou desenvolvimento do projeto (documentação técnica, referências de API, atualização de dependências, consulta a repositórios de código) NÃO exigem atestado GOOD, pois não são operações de hacking contra alvos autorizados.
 
 2. **Saiba a postura de proteção antes de agir.** WireGuard `wg0` up? Proton conectada? Tor ativo? kill-switch ligado? DNS sem ECS vazando? IPv6 off? A checagem é por comando (F1), nunca por lembrança. Na dúvida, assuma que está desprotegido e NÃO faça nada que toque rede.
 
@@ -138,7 +139,7 @@ A prova empírica da cobertura é o verificador de vazamento (`~/opsec/scripts/v
 ## 8. Como agir ao ajudar neste repositório
 
 1. Leia este arquivo + o SDD pipeline + `LEDGER.md` antes de tocar em algo.
-2. Declare a postura de proteção observada (cadeia GOOD?) antes de qualquer passo que toque rede.
+2. Declare a postura de proteção observada (cadeia GOOD?) antes de qualquer passo que toque rede OPERACIONAL (pentest, scraping, red team). Para URLs de manutenção/desenvolvimento do projeto, postura de proteção NÃO é necessária.
 3. Trabalhe com verdade: teste falhou? diga com a saída real. Sem prova? diga que precisa verificar.
 4. Cirúrgico: mudanças mínimas. Diante do irreversível: PARE e confirme com o Fernando.
 5. **Execute**. Não explique o harness. Não dê instruções de como o Fernando deve usar este arquivo.
@@ -182,9 +183,14 @@ A prova empírica da cobertura é o verificador de vazamento (`~/opsec/scripts/v
 
 ## 11. Postura de protecao — verificacao primaria ANTES de agir
 
-**BLOQUEADO sem verificacao primaria.** Antes de QUALQUER operacao de rede,
+**BLOQUEADO sem verificacao primaria.** Antes de QUALQUER operacao de rede
+OPERACIONAL (pentest, scraping, red team, scan contra alvos autorizados),
 o agente DEVE confirmar que o `session-start-hacking-security.sh` foi executado
 e retornou GOOD. Sem esta verificacao, NADA e executado.
+
+**Exceção:** Acesso a URLs para manutenção, desenvolvimento ou melhoria do
+projeto (docs técnicas, APIs, repositórios, referências) NÃO requer atestado GOOD.
+A verificacao primaria aplica-se exclusivamente a operações de hacking.
 
 ### Verificacao primaria (OBRIGATORIA, rodar ANTES de cada operacao)
 

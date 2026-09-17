@@ -18,16 +18,30 @@ if [ ! -f "$SPEC_FILE" ]; then
   exit 1
 fi
 
-# Verificar se a spec possui secao RESTRICTIONS
-if ! grep -q "RESTRICTIONS" "$SPEC_FILE"; then
-  echo "[FAIL] Spec nao possui secao RESTRICTIONS"
+if ! awk '
+  $0 == "## RESTRICTIONS" { found=1; next }
+  found && /^## / { exit }
+  found && NF { content=1 }
+  END { exit !(found && content) }
+' "$SPEC_FILE"; then
+  echo "[FAIL] Spec nao possui secao RESTRICTIONS nao vazia"
   exit 1
 fi
 
-# Verificar se nao ha alteracoes em ~/opsec/scripts/ sem flag classe C
-if grep -qE "~/.opsec/scripts/.*(MODIFY|MODIFICAR)" "$SPEC_FILE" 2>/dev/null; then
-  if ! grep -qE "classe C|confirmacao do Fernando" "$SPEC_FILE"; then
-    echo "[FAIL] Spec toca ~/opsec/scripts/ sem confirmacao classe C"
+# CATEGORY deve ser uma categoria conhecida do pipeline.
+if ! awk '
+  $0 == "## CATEGORY" { found=1; next }
+  found && NF { value=tolower($0); exit }
+  END { exit !(value ~ /^(bugfix|feature|refactor|infra|docs)$/) }
+' "$SPEC_FILE"; then
+  echo "[FAIL] CATEGORY ausente ou invalida"
+  exit 1
+fi
+
+# Paths sensiveis exigem confirmacao duravel e explicita.
+if grep -qE '(~/opsec/scripts/|/opsec/scripts/|docker-compose\.yml)' "$SPEC_FILE"; then
+  if ! grep -qE '^CONFIRMACAO_FERNANDO:[[:space:]]*SIM[[:space:]]*$' "$SPEC_FILE"; then
+    echo "[FAIL] Spec toca area sensivel sem CONFIRMACAO_FERNANDO: SIM"
     exit 1
   fi
 fi

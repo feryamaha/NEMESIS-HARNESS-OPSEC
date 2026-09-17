@@ -83,6 +83,17 @@ Usar `templates/TEMPLATE-RELATORIO.md`:
 | Confianca | [alta/media/baixa] |
 | Base | [comando rodado + citacao de referencia, F6] |
 
+## Padrões Graph+Loop
+
+Este agente opera sob os padrões Graph+Loop implementados no projeto:
+
+- **Routing**: Classificação de operações por CATEGORY + FILES INVOLVED (via `graph-loop.py route`). Operações sensíveis (com `~/opsec/scripts/` nos FILES INVOLVED) recebem guard reforçado automaticamente.
+- **Delegação dinâmica**: Seleção de workers via seção WORKERS da spec ou defaults baseados em rota. WORKERS explícitos prevalecem sobre defaults.
+- **Paralelismo**: Varreduras independentes (nmap, masscan, curl) executam em paralelo via `graph-loop.py parallel`.
+- **Loop evaluator-optimizer**: Otimização iterativa de payloads com feedback via `graph-loop.py loop` (generator ↔ evaluator com EVALUATOR_* variables).
+
+Executor: `.hacker/scripts/graph-loop.py`
+
 ## Referencias (RAG)
 
 Citar ao menos 1 referencia quando pertinente:

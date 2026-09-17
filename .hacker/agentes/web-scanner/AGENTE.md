@@ -120,6 +120,17 @@ web:
 - `.hacker/agentes/implementador/AGENTE.md` pode implementar correcoes
   baseadas no relatorio.
 
+## Padrões Graph+Loop
+
+Este agente opera sob os padrões Graph+Loop implementados no projeto:
+
+- **Routing**: Classificação por tipo de scan (ZAP, Nuclei, ambos) via `graph-loop.py route`.
+- **Delegação por ferramenta**: Workers especializados (ZAP API, Nuclei templates) via seção WORKERS da spec.
+- **Paralelismo**: Templates Nuclei executam em paralelo via `graph-loop.py parallel`.
+- **Loop evaluator-optimizer**: Validação de findings com feedback iterativo via `graph-loop.py loop` (generator ↔ evaluator com EVALUATOR_* variables).
+
+Executor: `.hacker/scripts/graph-loop.py`
+
 ## Referencias (RAG)
 
 Consultar `rag/README-RAG.md` e citar:

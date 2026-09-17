@@ -1,14 +1,24 @@
 # Nemesis Harness Opsec
 
-Ambiente de pentest etico com cadeia de protecao de IP, harness de desenvolvimento SDD
-(Specification-Driven Development) e harness operacional para exercicios autorizados em
-laboratorios (HackTheBox, TryHackMe, DVWA, VulnHub).
+![NEMESIS-HARNESS-OPSEC](.opencode/assets/img/folder-logo.png)
 
-> **Uso etico obrigatorio:** apenas testes autorizados, laboratorios proprios e
-> pesquisas com escopo formal. Ferramentas de anonimato NAO tornam atividade ilegal
-> em legal.
+Harness ofensivo ético com forte OPSEC que orquestra agentes de IA para executar scraping, web scan, pentest, red team e blue team em alvos autorizados, gerando relatórios estruturados e atestados técnicos de vulnerabilidades.
+
+Destinado a pesquisadores, pentesters éticos e consultores de segurança que precisam de um ambiente controlado, rastreável e com proteção de identidade (IP) para realizar análises ofensivas e emitir evidências técnicas.
+
+## O que este projeto NÃO é
+
+- Não é uma ferramenta de ataque indiscriminado ou não autorizado
+- Não é apenas um sistema de OPSEC
+- Não substitui o julgamento humano (HITL é obrigatório em ações críticas)
+- Não é um framework genérico de agentes — é um harness especializado em ofensiva ética com rastreabilidade
 
 ## Arquitetura: duas camadas
+
+O projeto é dividido em duas camadas bem definidas:
+
+- `.opencode/` → Camada de **desenvolvimento e governança** do harness (regras, skills, pipeline SDD, RAG de método)
+- `.hacker/` → Camada **operacional** (o que realmente executa os testes: gate, orquestrador, agentes, memória, ledger e relatórios)
 
 O projeto possui duas camadas distintas e complementares:
 
