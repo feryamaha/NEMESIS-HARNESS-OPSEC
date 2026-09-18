@@ -75,8 +75,10 @@ LEDGER.md
 .hacker/reports/OP-*.md
 .hacker/reports/artefatos/
 
-# --- SPECS COM NOMES DE ALVOS ---
-.opencode/specs/SPEC_013_waf-bypass-pentest.md
+# --- SPECS, ISSUES E PLANS (podem conter dados de alvos) ---
+.opencode/issues/
+.opencode/specs/
+.opencode/plans/
 
 # =====================================================
 # NOTA: ~/opsec/.env está FORA do workspace
